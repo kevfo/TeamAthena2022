@@ -50,7 +50,7 @@ Click on the bullet points to access these resources!
 
 If you are the reading-type, then you could check out this / these resource(s):
 
-1.  [**Hands-On Programming with R**]{https://rstudio-education.github.io/hopr/basics.html#arguments}
+1.  [**Hands-On Programming with R**](https://rstudio-education.github.io/hopr/basics.html#arguments)
 
     If you're pressed for time, then *at least* read through chapter two of this book.  This book is
     meant to be an introduction to R for non-programmers and is great if you just want to learn
@@ -70,12 +70,12 @@ following MOOCs for free (recall that all NTU students have free Coursera access
 
     This is a supposed-introduction to the R programming language (i.e., what is R, how do you define a function in R, etc).  Although this course is four-weeks long, it's still *very tough*!
 
-1.  [**Practical Machine Learning**](https://www.coursera.org/learn/practical-machine-learning)
+1.  [**Practical Machine Learning**](https://www.coursera.org/learn/practical-machine-learning) *by Johns Hopkins University*
 
     This course is actually part of a data science specialization by Johns Hopkins University, but it's still very much
     relevant to this event.  This course is four-weeks long and also *super* tough!
 
-1.  [**Data Visualization in R with `ggplot2`**](https://www.coursera.org/learn/jhu-data-visualization-r)
+1.  [**Data Visualization in R with `ggplot2`**](https://www.coursera.org/learn/jhu-data-visualization-r) *by Johns Hopkins University*
 
     If you don't know (or forgot) what `ggplot2` is, it's a package in R that helps you to create presentation-worthy plots (i.e., if you are presenting your work in front of an audience, then `ggplot2` could be well worth considering).  
 
