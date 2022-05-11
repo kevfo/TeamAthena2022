@@ -64,7 +64,7 @@ If you are the reading-type, then you could check out this / these resource(s):
 ### MOOCs
 
 If you prefer MOOCs to books (or just want a certificate), then you can consider taking the
-following MOOCs for free (recall that all NTU students have free Coursera access to MOOCs from other institutions)
+following MOOCs for free (recall that all NTU students have free Coursera access to MOOCs from other institutions):
 
 1.  [**R Programming**](https://www.coursera.org/learn/r-programming?specialization=jhu-data-science) *by Johns Hopkins University*
 
