@@ -1,6 +1,6 @@
 # Team Athena's GitHub Repository
 
-*If you don't already have Git installed on your machine, you can install it here: [https://git-scm.com/](https://git-scm.com/)*
+*PS: If you don't already have Git installed on your machine, you can install it here: [https://git-scm.com/](https://git-scm.com/)*
 
 First and foremost, welcome to team Athena's private GitHub repository for this
 year's Biohackathon event (supported by the [National Kidney Foundation](https://nkfs.org/)
