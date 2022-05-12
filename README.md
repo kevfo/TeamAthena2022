@@ -39,6 +39,34 @@ Like the third point implies, **Git** is a version control system: systems that
 help track changes in code over time.  Granted - there are many version control
 systems out there, but Git is one of the most, if not *the* most popular!
 
+## Code of Conduct
+
+Before I begin listing any resources for (re-)learning R, I think it's best to lay down
+some grounds rules first in the forms of questions that you might have.  This is so that we all know what to expect (and so that I don't end up nagging your ears off during the event).
+
+### How long is the event during each day?
+
+Technically, the event takes place from 10:00 AM to 5:00 PM during each day of the Biohackathon.  However, if you want to or need to code before or after those hours, then by all means, go right ahead.  
+
+However, I could care less about those hours truth be told.  As long as you get your share of work done in a reasonable amount of time, you could be in Sentosa enjoying a family outing during those hours and I wouldn't care.  After all - I trust that all of you are responsible enough to get things done without needing constant reminders (and also seek help if need be)!
+
+### How would each day unfold?
+
+That's tough to say - only we would know for certain during the event itself.  However, here's what I imagine would happen on a typical day:
+
+1.  At the beginning of each day, we let each other know where we are in the workflow and the presentation.  
+1.  We continue working throughout the day, also helping each other out if need be (this can continue past 5:00 PM if it's necessary).
+1.  Once you are satisfied enough with your code, make a pull request to this repository and I'll have a look at it sometime in the evening.  Do make sure to comment on the changes that you've made in your pull requests - it saves time for all of us (i.e., so that myself and others know what it is that you've done)!
+
+### What if I'm really stuck during the event?
+
+If that's the case:
+
+1.  You can ask for help in the group chat.  Perhaps somebody else might be able to solve the issue that you are having!
+1.  Find help on the internet.
+
+If you are genuinely stuck, then the onus is ultimately on you to get yourself un-stuck.  Whatever the case though, please do not just sit around and do nothing; four days is *not* a lot of time!
+
 ## Resources for Learning R
 
 If you have little to no experience with R (whether it be because you've never touched
