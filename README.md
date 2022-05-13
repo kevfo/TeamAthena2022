@@ -109,3 +109,5 @@ following MOOCs for free (recall that all NTU students have free Coursera access
 
     Unlike the other two MOOCs, this one is relatively chill - although the course is also four weeks long, I managed to finish
     it in one sitting!
+
+asjdkfasdfassdfasdfasdfadsf
