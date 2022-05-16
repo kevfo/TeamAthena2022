@@ -29,7 +29,7 @@ hence, I will list some resources that you can consult during the event itself:
 Like the title of this sub-section implies, this sub-section contains resources that
 we may or may not end up using (based off several ideas I dreamed up over a sleepless night):
 
-1.  [A Quick Guide to LaTeX](https://www.library.caltech.edu/sites/default/files/latex-quickguide.pdf)
+1.  [**A Quick Guide to LaTeX**](https://www.library.caltech.edu/sites/default/files/latex-quickguide.pdf)
 
     This is a document I found off Caltech's repository.  If we ever have a need to display mathematics, some LaTeX
     would definitely do us good (i.e., there's a very good reason why LaTeX is more or less the "gold" standard for
