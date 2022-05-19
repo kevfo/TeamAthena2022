@@ -37,3 +37,11 @@ we may or may not end up using (based off several ideas I dreamed up over a slee
     visually-appealing PDF documents.
 
     This guide is a bit like boxed wine: it's not the nicest thing to look at or read, but it gets the job done well enough.
+
+1.  [**flexdashboard**](https://pkgs.rstudio.com/flexdashboard/index.html)
+
+    This is a package that allows you to create responsive and dynamic UI without having to write a single line of HTML, CSS, or JavaScript (in a sense, it's a bit like Shiny).  
+
+1.  [**bookdown**](https://bookdown.org/yihui/bookdown/)
+
+    This package allows you to create gitbook-style websites (great for documentations and whatnot) solely using R Markdown.
