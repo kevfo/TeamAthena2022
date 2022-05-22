@@ -45,3 +45,8 @@ we may or may not end up using (based off several ideas I dreamed up over a slee
 1.  [**bookdown**](https://bookdown.org/yihui/bookdown/)
 
     This package allows you to create gitbook-style websites (great for documentations and whatnot) solely using R Markdown.
+
+1.  [**plumber**](https://www.rplumber.io/)
+
+    Depending on what we do choose to do in the end, I think that making a RESTful API could be within our reach (e.g., if we end
+      up making a tool of some sort for others to use).
