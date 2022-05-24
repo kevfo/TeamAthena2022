@@ -3,7 +3,15 @@ library(tidyverse) ; library(corrplot)
 # First, let's read in the data that we cleaned (removing everything else 
 # before that first):
 rm(list = ls()) ; par(mfrow = c(1, 1))
-data <- read_csv("data.csv") %>% select(-c(...1))
+
+# Read in the data:
+setwd("C:/Users/Kevin/Desktop/Projects/R/TeamAthena2022/analysis/")
+data <- read_csv("ImputedData.csv")
+
+# Taking a look at the data:
+str(data) ; summary(data)
+
+# Convert everything into a factor first...
 data$rbc <- as.factor(data$rbc) ; data$pc <- as.factor(data$pc)
 data$pcc <- as.factor(data$pcc) ; data$ba <- as.factor(data$ba)
 data$htn <- as.factor(data$htn) ; data$dm <- as.factor(data$dm)
@@ -13,7 +21,7 @@ data$classification <- as.factor(data$classification)
 
 # I think we should take a look to see if any variables are correlated - I'm
 # using all numerical values (i.e., so the factors will not be in the correlation
-# graph that I'm about to make):
+# graph that I'm about to make) - also include this graph in our flexdashboard:
 str(data)
 data %>% select(c(age, bp, sg, al, su, bgr, bu, sc, sod, pot, hemo, pcv)) %>% 
   cor() %>% corrplot(method = "number")
@@ -22,7 +30,7 @@ data %>% select(c(age, bp, sg, al, su, bgr, bu, sc, sod, pot, hemo, pcv)) %>%
 # if we use hemo or pcv in our model, then we shouldn't use the other (and 
 # vice verl)) + geom_bar(aes(fill = classification)) + facet_wrap(~al)
 # sa).  A similar argument can probably be made for hemo / al,
-# hemo / sg, and hemo / bu.
+# hemo / sc, and hemo / bu.
 
 # Otherwise, I think it could be worth exploring the relationship between
 # our dependent variable classification and other categorical variables:
@@ -68,7 +76,7 @@ ggplot(data, aes(x = appet)) + geom_bar(aes(fill = classification)) +
 # I don't know how valid this is in the Singaporean context - this is something
 # that we might have to look into in the near future.  Nevertheless:
 data$agerange <- case_when(data$age < 45 ~ "Young",
-                           data$age >= 45 & data$age < 65 ~ "Middle age",
+                           data$age < 65 ~ "Middle age",
                            data$age >= 65 ~ "Elderly")
 data$agerange <- as.factor(data$agerange)
 
@@ -83,3 +91,9 @@ ggplot(data, aes(x = classification)) + geom_bar(aes(fill = classification)) +
 
 # I suggest create a "base" model to improve on - perhaps using ALL features
 # and then trying to improve upon it...
+
+# Hoong Kai and Edsel - see if there's anything else within the data
+# that you want to explore!
+#
+#
+#
