@@ -3,9 +3,10 @@
 # Load the necessary packages
 library(tidyverse)
 library(caret)
+library(mi)
 
 # Set working directory
-setwd(" ")
+setwd("C:/Users/Kevin/Desktop/Projects/R/TeamAthena2022/analysis/")
 
 # Clear the global environment
 rm(list = ls())
@@ -32,6 +33,7 @@ str(data)
 
 # Explore missing entries
 apply(is.na(data), MARGIN = 2, FUN = which)
+colSums(is.na(data))
 data %>% na.omit() %>% nrow()
 
 # entries appear to be missing at random (i.e., missing data don't seem to follow
@@ -53,256 +55,68 @@ plot(data$age, data$wc) ; plot(data$age, data$rc)
 # also remove entries with unknown kidney disease status
 data <- data %>% filter(!is.na(age) & !is.na(classification))
 
-# remove ages 0 to 5 as it might be inaccurate to impute the other measurements
-data <- data %>% filter(age > 5)
-
-# Analyzing "white blood cell count" and "red blood cell count" variables
-summary(data$wc) ; summary(data$rc)
-
 # wc and rc have at least 25% missing data, therefore remove them as data might
 # become biased as a result of median imputation
 data <- data %>% select(-c(wc, rc))
 
+## == Using MI to impute the missing data == 
 
-## == Imputing Numerical Variables with Median ==
+missingData <- missing_data.frame(as.matrix(data))
 
-# Determine variables with NAs
-colSums(is.na(data))
+# I think it's wise to explore the data a little bit further before trying 
+# to impute anything else
 
-# Construct multiple boxplots
-# to impute NAs with medians because there is a large range of data
-par(mfrow = c(3, 3))
-boxplot(bp ~ classification, data) ; boxplot(sg ~ classification, data) ; boxplot(bgr ~ classification, data)
-boxplot(bu ~ classification, data) ; boxplot(sc ~ classification, data) ; boxplot(sod ~ classification, data)
-boxplot(pot ~ classification, data) ; boxplot(hemo ~ classification, data) ; boxplot(pcv ~ classification, data)
+show(missingData)
 
-# Split the dataset by classification to compute them separately
-ckd <- data[data$classification == "ckd", ]
-notckd <- data[data$classification == "notckd", ]
+# Change some of the data that we have:
+missingData <- change(missingData, y = c('age', 'bp', 'sg', 'al', 'su',
+                          'bgr', 'bu',
+                          'sc', 'sod', 'pot',
+                          'hemo', 'pcv'),
+       what = "type", to = c(rep("continuous", 3),
+                             rep('ordered-categorical', 2),
+                             rep('continuous', 7)))
+show(missingData)
 
-# Analyzing "blood pressure" variable
-summary(ckd$bp) ; summary(notckd$bp)
+# Now that the data is (mostly) of the correct type, the vignette for mi
+# suggests that we call summary() on missingData to get a sense of what 
+# our raw data looks like:
 
-for (i in which(is.na(data$bp))) {
-  data[i, ]$bp <- ifelse(data[i, ]$classification == "ckd",
-                         median(ckd$bp, na.rm = TRUE),
-                         median(notckd$bp, na.rm = TRUE))
-}
+summary(missingData)
+image(missingData)  # Use this plot for data cleaning section in shinyflexboard!
+                    # Use this to justify imputing missing data.
 
-# Analyzing "specific gravity" variable
-summary(ckd$sg) ; summary(notckd$sg)
+# Then, impute the data as per the vignette (consider parallel computations
+# for the sake of speed):
+imputations <- mi(missingData, parallel = T, n.iter = 80)
 
-for (i in which(is.na(data$sg))) {
-  data[i, ]$sg <- ifelse(data[i, ]$classification == "ckd",
-                         median(ckd$sg, na.rm = TRUE),
-                         median(notckd$sg, na.rm = TRUE))
-}
+# To verify that our imputations is good, I'm just following the vignette's
+# reasoning:
+imputations %>% mipply(mean, to.matrix = T) %>% round(3)
 
-# Analyzing "blood glucose random" variable
-par(mfrow = c(1, 2))
-hist(data$bgr) ; hist(ckd$bgr)
-summary(ckd$bgr) ; summary(notckd$bgr)
+# The documentation for the below function does shed some insight into what
+# this function does.  "R-hat" appears to be some sort convergence statistic
+# that compares the variance between chains.  
+#
+# As a general guideline, an R-hat approaching 1 is good - anything more than
+# 1.1 means that more computation is needed.
+Rhats(imputations)
 
-for (i in which(is.na(data$bgr))) {
-  data[i, ]$bgr <- ifelse(data[i, ]$classification == "ckd",
-                          median(ckd$bgr, na.rm = TRUE),
-                          median(notckd$bgr, na.rm = TRUE))
-}
-
-# Analyzing "blood urea" variable
-summary(ckd$bu) ; summary(notckd$bu)
-
-for (i in which(is.na(data$bu))) {
-  data[i, ]$bu <- ifelse(data[i, ]$classification == "ckd",
-                         median(ckd$bu, na.rm = TRUE),
-                         median(notckd$bu, na.rm = TRUE))
-}
-
-# Analyzing "serum creatinine" variable
-summary(ckd$sc) ; summary(notckd$sc)
-
-for (i in which(is.na(data$sc))) {
-  data[i, ]$sc <- ifelse(data[i, ]$classification == "ckd",
-                         median(ckd$sc, na.rm = TRUE),
-                         median(notckd$sc, na.rm = TRUE))
-}
-
-# Analyzing "sodium" variable
-summary(ckd$sod) ; summary(notckd$sod)
-
-for (i in which(is.na(data$sod))) {
-  data[i, ]$sod <- ifelse(data[i, ]$classification == "ckd",
-                          median(ckd$sod, na.rm = TRUE),
-                          median(notckd$sod, na.rm = TRUE))
-}
-
-# Analyzing "potassium" variable
-summary(ckd$pot) ; summary(notckd$pot)
-
-for (i in which(is.na(data$pot))) {
-  data[i, ]$pot <- ifelse(data[i, ]$classification == "ckd",
-                          median(ckd$pot, na.rm = TRUE),
-                          median(notckd$pot, na.rm = TRUE))
-}
-
-# Analyzing "hemoglobin" variable
-summary(ckd$hemo) ; summary(notckd$hemo)
-
-for (i in which(is.na(data$hemo))) {
-  data[i, ]$hemo <- ifelse(data[i, ]$classification == "ckd",
-                           median(ckd$hemo, na.rm = TRUE),
-                           median(notckd$hemo, na.rm = TRUE))
-}
-
-# Analyzing "packed cell volume" variable
-summary(ckd$pcv) ; summary(notckd$pcv)
-
-for (i in which(is.na(data$pcv))) {
-  data[i, ]$pcv <- ifelse(data[i, ]$classification == "ckd",
-                          median(ckd$pcv, na.rm = TRUE),
-                          median(notckd$pcv, na.rm = TRUE))
-}
+plot(imputations)   # Also use these plots too (perhaps we can take  
+                    # three random graphs since they all explain the same 
+                    # thing and leave them inside the shinyflexboard document).  
 
 
-## == Imputing Categorical Variables using kNN ==
+# How does the imputed data look compared to the original image?
+image(imputations)  # Also use this plot...
 
-# Determine variables with NAs
-colSums(is.na(data))
+# And then observe the mean of the finished data:
+summary(imputations) # Not sure whether or not to use the data from this function
 
-# Predicting for "albumin" variable
-specialData <- data %>%
-  filter(!is.na(al)) %>%
-  select(-c('su', 'rbc', 'pc', 'pcc', 'ba', 'htn', 'dm', 'cad', 'appet', 'pe', 'ane', 'classification'))
+# When we're done, we can write our imputed data to a .csv file that 
+# I'll then use:
+com <- imputations %>% complete(m = 1) ; write.csv(com[, 1:23], 
+                                                   "ImputedData.csv",
+                                                   row.names = F)
 
-alPredictor <- train(al ~ ., data = specialData, method = 'knn')
 
-for (i in 1:nrow(data)) {
-  if (is.na(data$al[i])) data$al[i] <- predict(alPredictor, data[i, ])
-}
-
-# Predicting for "sugar" variable
-specialData <- data %>%
-  filter(!is.na(su)) %>%
-  select(-c('al', 'rbc', 'pc', 'pcc', 'ba', 'htn', 'dm', 'cad', 'appet', 'pe', 'ane', 'classification'))
-
-suPredictor <- train(su ~ ., data = specialData, method = 'knn')
-
-for (i in 1:nrow(data)) {
-  if (is.na(data$su[i])) data$su[i] <- predict(suPredictor, data[i, ])
-}
-
-# Predicting for "red blood cell" variable
-specialData <- data %>%
-  filter(!is.na(rbc)) %>%
-  select(-c('al', 'su', 'pc', 'pcc', 'ba', 'htn', 'dm', 'cad', 'appet', 'pe', 'ane', 'classification'))
-
-rbcPredictor <- train(rbc ~ ., data = specialData, method = 'knn')
-
-for (i in 1:nrow(data)) {
-  if (is.na(data$rbc[i])) data$rbc[i] <- predict(rbcPredictor, data[i, ])
-}
-
-# Predicting for "pus cell" variable
-specialData <- data %>%
-  filter(!is.na(pc)) %>%
-  select(-c('al', 'su', 'rbc', 'pcc', 'ba', 'htn', 'dm', 'cad', 'appet', 'pe', 'ane', 'classification'))
-
-pcPredictor <- train(pc ~ ., data = specialData, method = 'knn')
-
-for (i in 1:nrow(data)) {
-  if (is.na(data$pc[i])) data$pc[i] <- predict(pcPredictor, data[i, ])
-}
-
-# Predicting for "pus cell clumps" variable
-specialData <- data %>%
-  filter(!is.na(pcc)) %>%
-  select(-c('al', 'su', 'rbc', 'pc', 'ba', 'htn', 'dm', 'cad', 'appet', 'pe', 'ane', 'classification'))
-
-pccPredictor <- train(pcc ~ ., data = specialData, method = 'knn')
-
-for (i in 1:nrow(data)) {
-  if (is.na(data$pcc[i])) data$pcc[i] <- predict(pccPredictor, data[i, ])
-}
-
-# Predicting for "bacteria" variable
-specialData <- data %>%
-  filter(!is.na(ba)) %>%
-  select(-c('al', 'su', 'rbc', 'pc', 'pcc', 'htn', 'dm', 'cad', 'appet', 'pe', 'ane', 'classification'))
-
-baPredictor <- train(ba ~ ., data = specialData, method = 'knn')
-
-for (i in 1:nrow(data)) {
-  if (is.na(data$ba[i])) data$ba[i] <- predict(baPredictor, data[i, ])
-}
-
-# Predicting for "hypertension" variable
-specialData <- data %>%
-  filter(!is.na(htn)) %>%
-  select(-c('al', 'su', 'rbc', 'pc', 'pcc', 'ba', 'dm', 'cad', 'appet', 'pe', 'ane', 'classification'))
-
-htnPredictor <- train(htn ~ ., data = specialData, method = 'knn')
-
-for (i in 1:nrow(data)) {
-  if (is.na(data$htn[i])) data$htn[i] <- predict(htnPredictor, data[i, ])
-}
-
-# Predicting for "diabetus mellitus" variable
-specialData <- data %>%
-  filter(!is.na(dm)) %>%
-  select(-c('al', 'su', 'rbc', 'pc', 'pcc', 'ba', 'htn', 'cad', 'appet', 'pe', 'ane', 'classification'))
-
-dmPredictor <- train(dm ~ ., data = specialData, method = 'knn')
-
-for (i in 1:nrow(data)) {
-  if (is.na(data$dm[i])) data$dm[i] <- predict(dmPredictor, data[i, ])
-}
-
-# Predicting for "coronary artery disease" variable
-specialData <- data %>%
-  filter(!is.na(cad)) %>%
-  select(-c('al', 'su', 'rbc', 'pc', 'pcc', 'ba', 'htn', 'dm', 'appet', 'pe', 'ane', 'classification'))
-
-cadPredictor <- train(cad ~ ., data = specialData, method = 'knn')
-
-for (i in 1:nrow(data)) {
-  if (is.na(data$cad[i])) data$cad[i] <- predict(cadPredictor, data[i, ])
-}
-
-# Predicting for "appetite" variable
-specialData <- data %>%
-  filter(!is.na(appet)) %>%
-  select(-c('al', 'su', 'rbc', 'pc', 'pcc', 'ba', 'htn', 'dm', 'cad', 'pe', 'ane', 'classification'))
-
-appetPredictor <- train(appet ~ ., data = specialData, method = 'knn')
-
-for (i in 1:nrow(data)) {
-  if (is.na(data$appet[i])) data$appet[i] <- predict(appetPredictor, data[i, ])
-}
-
-# Predicting for "pedal edema" variable
-specialData <- data %>%
-  filter(!is.na(pe)) %>%
-  select(-c('al', 'su', 'rbc', 'pc', 'pcc', 'ba', 'htn', 'dm', 'cad', 'appet', 'ane', 'classification'))
-
-pePredictor <- train(pe ~ ., data = specialData, method = 'knn')
-
-for (i in 1:nrow(data)) {
-  if (is.na(data$pe[i])) data$pe[i] <- predict(pePredictor, data[i, ])
-}
-
-# Predicting for "anaemia" variable
-specialData <- data %>%
-  filter(!is.na(ane)) %>%
-  select(-c('al', 'su', 'rbc', 'pc', 'pcc', 'ba', 'htn', 'dm', 'cad', 'appet', 'pe', 'classification'))
-
-anePredictor <- train(ane ~ ., data = specialData, method = 'knn')
-
-for (i in 1:nrow(data)) {
-  if (is.na(data$ane[i])) data$ane[i] <- predict(anePredictor, data[i, ])
-}
-
-# Check variables with NAs again
-colSums(is.na(data))
-
-# Export the processed data
-write.csv(data, "data.csv")
