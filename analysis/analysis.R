@@ -191,15 +191,6 @@ for (i in 1:nrow(data)) {
   if (is.na(data$rbc[i])) data$rbc[i] <- predict(rbcPredictor, data[i, ])
 }
 
-specialData <- data %>% filter(!is.na(rbc)) %>% select(-c('su', 'rbc', 'pcc', 'ba', 'htn', 'dm', 'cad', 'appet', 'pe', 'ane', 'classification', 'al'))
-rbcPredictor <- train(rbc ~ ., 
-                      data = specialData,
-                      method = 'knn')
-for (i in 1:nrow(data)) {
-  if (is.na(data$rbc[i])) data$rbc[i] <- predict(rbcPredictor, data[i, ])
-}
-data$rbc <- ifelse(data$rbc == 2, 'abnormal', 'normal')
-
 
 specialData <- data %>% filter(!is.na(pc)) %>% select(-c('su', 'rbc', 'pcc', 'ba', 'htn', 'dm', 'cad', 'appet', 'pe', 'ane', 'classification', 'al'))
 pcPredictor <- train(pc ~ ., 
