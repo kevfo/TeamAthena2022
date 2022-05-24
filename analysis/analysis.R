@@ -1,5 +1,5 @@
 # Load in the necessary packages first:
-library(tidyverse)
+library(tidyverse) ; library(magrittr) ; library(dplyr)
 
 # Set the working directory:
 # PS: do change the directory according to your machine (i.e., the line of 
@@ -293,4 +293,4 @@ for (i in 1:nrow(data)) {
   if (is.na(data$ane[i])) data$ane[i] <- predict(anePredictor, data[i, ])
 }
 
-write.csv(data, "data")
+write.csv(data, "data.csv")
