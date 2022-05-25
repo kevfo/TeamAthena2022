@@ -1,6 +1,9 @@
 library(tidyverse) ; library(caret) ; library(vip) ; library(dplyr)
 library(rattle) ; library(ROCR) ; library(car)
 
+setwd("C:/Users/Kevin/Desktop/Projects/R/TeamAthena2022/analysis/")
+source("EDA.R")
+
 # This is a function to make an AUC curve: a plot of a classifier's
 # TPR versus its FPR.  Feel free to ask any questions that you may have!
 # PS: change "color = T" if you want color according to probability cutoffs.
@@ -23,9 +26,6 @@ makeROC <- function(model, testData, title, color = F) {
 grid(lty = 'dashed', lwd = 1.5) ; text(paste0("AUC: ", AUCval),
                                        x = 0.7, y = 0.3)
 }
-
-setwd("C:/Users/Kevin/Desktop/Projects/R/TeamAthena2022/analysis/")
-source("EDA.R")
 
 # Now that we have our data... I think now's also a good time to begin training 
 # our first models...
