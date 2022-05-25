@@ -5,6 +5,7 @@ library(shiny)
 #source('model.R')
 
 choices <- c('yes', 'no')
+alLevels <- 0:5
 
 ui <- fluidPage(
   tabsetPanel(
@@ -13,10 +14,11 @@ ui <- fluidPage(
                sidebarPanel(
                  numericInput('sc', 'Serum Creatinine (sc) Level (mgs / dl)', 0, min = 0),
                  numericInput('sg', 'Specific Gravity (sg)', 0, min = 0),
-                 numericInput('al', 'Albumin Level (al)', 0, min = 0),
+                 selectInput('al', 'Albumin Level (al)', alLevels),
                  selectInput('htn', 'Has Hypertension (htn)?', choices),
                  numericInput('sod', 'Sodium (sod) Level (mEg / L)', 0, min = 0),
                  numericInput('bu', 'Blood Urea (bu) Level (mgs / dl)', 0, min = 0),
+                 numericInput('bgr', 'Blood glucose random (bgr - mgs / dl)', 0, min = 0),
                  actionButton('submit', 'Predict Status')
                ),
                mainPanel(
@@ -42,9 +44,9 @@ server <- function(input, output, session) {
     if (input$submit > 0) {
       df <- data.frame(
         sc = input$sc, sg = input$sg, al = input$al, htn = input$htn,
-        sod = input$sod, bu = input$bu
+        sod = input$sod, bu = input$bu, bgr = input$bgr
       )
-      df$htn <- as.factor(df$htn)
+      df$htn <- as.factor(df$htn) ; df$al <- as.factor(df$al)
     }
     return(list(df = df))
   })
@@ -58,14 +60,14 @@ server <- function(input, output, session) {
   output$dataE1 <- renderTable({
     if (is.null(dataToReturn$df)) {return(data.frame(sc = NA, sg = NA, 
                                                      al = NA, htn = NA,
-                                                     sod = NA, bu = NA))}
+                                                     sod = NA, bu = NA, bgr = NA))}
     dataToReturn$df
   })
   
   output$status <- renderText({
     if (is.null(dataToReturn$df)) {return("Enter some data to get started!")}
     pStatus <- predict(rfWithVip, dataToReturn$df) %>% as.character()
-    if (pStatus == 'ckd') {
+    if (pStatus == 'Diseased') {
       return("<b><font color = \"red\">Patient has kidney disease</font></b>")
     } else {
       return("<b><font color = \"green\">Patient does not have kidney disease</font></b>")
@@ -86,14 +88,15 @@ server <- function(input, output, session) {
   dataToCompute <- reactiveValues(data = NULL)
   observeEvent(input$mdSubmit, {
     dataToCompute$df <- patientData()
+    dataToCompute$df$al <- as.factor(dataToCompute$df$al)
+    dataToCompute$df$htn <- as.factor(dataToCompute$df$htn)
     dataToCompute$allPred <- predict(rfWithVip, dataToCompute$df)
   })
   
   output$testme <- renderDataTable({
     if (is.null(dataToCompute$df)) {return(data.frame(`Subject Number` = NA, Predictions = NA))}
     data.frame(`Subject Number` = 1:length(dataToCompute$allPred), 
-                    Predictions = ifelse(dataToCompute$allPred == 'ckd', "Has Kidney Disease",
-                                         "No Kidney Disease"))
+                    Predictions = dataToCompute$allPred)
   }, options = list(pagelength = 5))
 }
 
