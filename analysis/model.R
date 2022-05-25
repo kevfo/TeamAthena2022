@@ -11,8 +11,8 @@ source("EDA.R")
 # shinyflexboard presentation...
 
 makeROC <- function(model, testData, title, color = F) {
-  binaryPred <- predict(model, testData) ; binaryPred <- ifelse(binaryPred == 'ckd', 1, 0) 
-  binaryActual <- ifelse(testData$classification == 'ckd', 1, 0)
+  binaryPred <- predict(model, testData) ; binaryPred <- ifelse(binaryPred == 'Diseased', 1, 0) 
+  binaryActual <- ifelse(testData$classification == 'Diseased', 1, 0)
   
   # Compute the AUC value:
   AUCval <- binaryPred %>% prediction(binaryActual) %>% 
@@ -122,8 +122,8 @@ text(x = 1, y = 0.97, "Cutoff")  # include this in shinyflexboard
 # substantial amount.  The more features we have, the longer it takes to train
 # our model, and I'm not very sure if it's worth that extra training time...
 
-data2 <- data %>% select(c(viStats$Variable[1:3], htn, 
-                           viStats$Variable[5:6], classification))
+data2 <- data %>% select(c(viStats$Variable[1:2], htn, 
+                           viStats$Variable[4:6], al, classification))
 
 set.seed(123)
 index <- createDataPartition(data2$classification, p = 0.6, list = F)
@@ -132,9 +132,10 @@ training <- data2[index, ] ; testing <- data2[-index, ]
 dim(training) ; dim(testing)
 rfWithVip <- train(classification ~ ., data = training, method = 'rf', trControl = kfold)
 
-# Accuracy: 98.71%, sensitivity: 1
+# Accuracy: 96.13%, sensitivity: 1
 rfPredictions <- predict(rfWithVip, testing)
 confusionMatrix(testing$classification, rfPredictions)
+makeROC(rfWithVip, testing, "Random Forest", T)
 
 # So far, we have three models:
 #
@@ -185,25 +186,25 @@ contrasts(training$classification)
 # So our model performs very well when it comes to its own data.  What 
 # about testing data?
 predictions <- predict(logBench, type = 'response')
-ifelse(predictions < 0.5, "ckd", 'notckd') %>% as.factor() %>% confusionMatrix(training$classification)
+ifelse(predictions < 0.5, "Diseased", 'Healthy') %>% as.factor() %>% confusionMatrix(training$classification)
 
-# Testing data:
+# Testing data (95.48 % accuracy, 92.71% sensitive):
 predictions <- predict(logBench, newdata = testing, type = 'response')
-ifelse(predictions < 0.5, 'ckd', 'notckd') %>% as.factor() %>% confusionMatrix(testing$classification)
+ifelse(predictions < 0.5, 'Diseased', 'Healthy') %>% as.factor() %>% confusionMatrix(testing$classification)
 
 # Make the ROC curve:
-logTestPred <- ifelse(predictions < 0.5, 'ckd', 'notckd') 
-logAucValue <- ifelse(logTestPred == 'ckd', 1, 0) %>% 
-  prediction(ifelse(testing$classification == 'ckd', 1, 0)) %>% performance(measure = 'auc')
+logTestPred <- ifelse(predictions < 0.5, 'Diseased', 'Healthy') 
+logAucValue <- ifelse(logTestPred == 'Diseased', 0, 1) %>% 
+  prediction(ifelse(testing$classification == 'Diseased', 0, 1)) %>% performance(measure = 'auc')
 logAucValue <- logAucValue@y.values[[1]]
 
-ifelse(logTestPred == 'ckd', 1, 0) %>% prediction(ifelse(testing$classification == 'ckd', 1, 0)) %>% 
+ifelse(logTestPred == 'Diseased', 0, 1) %>% prediction(ifelse(testing$classification == 'Diseased', 0, 1)) %>% 
   performance('tpr', 'fpr') %>% plot(main = 'ROC Curve of Logistic Regression',
                                      colorize = T)
 grid(lty = 'dashed', lwd = 1.5) ; text(x = 0.7, y = 0.3, paste0("AUC: ", logAucValue))
 
-# -- kNN -- (bad idea to begin with - 83.23% accuracy, 83.33% sensitive)
-knnBench <- train(classification ~ sc + sg + sod + bu, data = training, method = 'knn', trControl = kfold)
+# -- kNN -- (bad idea to begin with - 82.58% accuracy, 77.08% sensitive)
+knnBench <- train(classification ~ sc + sg + sod + bu + bgr, data = training, method = 'knn', trControl = kfold)
 knnBench
 
 predict(knnBench, testing) %>% confusionMatrix(testing$classification)
