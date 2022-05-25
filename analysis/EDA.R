@@ -7,7 +7,7 @@ library(ggpubr)
 library(GGally)
 
 # Set working directory
-setwd(" ")
+setwd(".")
 
 # Clear the global environment
 rm(list = ls())
@@ -26,7 +26,7 @@ data$pcc <- ifelse(data$pcc == "notpresent", "absent", "present")
 data$ba <- ifelse(data$ba == "notpresent", "absent", "present")
 
 # Type coercion to factor
-data[, c('rbc', 'pc', 'pcc', 'ba')] <- lapply(data[, c('rbc', 'pc', 'pcc', 'ba')], FUN = as.factor)
+data[, c('rbc', 'pc', 'pcc', 'ba', 'al')] <- lapply(data[, c('rbc', 'pc', 'pcc', 'ba', 'al')], FUN = as.factor)
 data[, c('htn', 'dm', 'cad', 'appet', 'pe', 'ane')] <- lapply(data[, c('htn', 'dm', 'cad', 'appet', 'pe', 'ane')], FUN = as.factor)
 data$classification <- factor(data$classification, levels = c("ckd", "notckd"), labels = c("Diseased", "Healthy"))
 
