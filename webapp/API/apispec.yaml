@@ -1,0 +1,59 @@
+servers:
+  - url: ' '
+openapi: 3.0.3
+info:
+  title: Kidney Disease Predictor
+  description: Simple API by team Athena to predict whether a patient has kidney disease given their health parameters.
+  version: 1.0.0
+paths:
+  /health-check:
+    get:
+      summary: Verifies that the API is up and running.
+      responses:
+        default:
+          description: Default response.
+      parameters: []
+  /predict:
+    post:
+      summary: Predicts a patient's kidney status given their health parameters.
+      responses:
+        default:
+          description: Default response.
+      parameters: []
+      requestBody:
+        description: Patient health data
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sg:
+                  type: number
+                  title: "Specific gravity (sg)"
+                  example: 1.015
+                sc:
+                  type: number
+                  title: "Serum creatinine (sc) level (mgs / dl)"
+                  example: 1.2
+                al:
+                  type: integer
+                  format: int64
+                  title: "Albumin level (al)"
+                  example: 0
+                htn:
+                  type: string
+                  title: "Has hypertension (htn)?"
+                  example: "yes"
+                sod:
+                  type: number
+                  title: "Sodium (sod) level (mEg / L)"
+                  example: 129.5272
+                bu:
+                  type: number
+                  title: "Blood urea (bu) level (mgs / dl)"
+                  example: 18
+                bgr:
+                  type: number
+                  title: "Blood glucose random (bgr - mgs/dl)"
+                  example: 100.12
