@@ -1,67 +1,179 @@
-library(tidyverse) ; library(corrplot)
+## == Data Import ==
 
-# First, let's read in the data that we cleaned (removing everything else 
-# before that first):
-rm(list = ls()) ; par(mfrow = c(1, 1))
+# Load the necessary packages
+library(tidyverse)
+library(ggplot2)
+library(ggpubr)
+library(GGally)
 
-# Read in the data:
-setwd("C:/Users/Kevin/Desktop/Projects/R/TeamAthena2022/analysis/")
+# Set working directory
+setwd(" ")
+
+# Clear the global environment
+rm(list = ls())
+
+# Import data
 data <- read_csv("ImputedData.csv")
+
+
+## == Data Pre-processing ==
 
 # Taking a look at the data:
 str(data) ; summary(data)
 
-# Convert everything into a factor first...
-data$rbc <- as.factor(data$rbc) ; data$pc <- as.factor(data$pc)
-data$pcc <- as.factor(data$pcc) ; data$ba <- as.factor(data$ba)
-data$htn <- as.factor(data$htn) ; data$dm <- as.factor(data$dm)
-data$cad <- as.factor(data$cad) ; data$appet <- as.factor(data$appet)
-data$pe <- as.factor(data$pe) ; data$ane <- as.factor(data$ane)
-data$classification <- as.factor(data$classification)
+# Changing some variable values for the plots later
+data$pcc <- ifelse(data$pcc == "notpresent", "absent", "present")
+data$ba <- ifelse(data$ba == "notpresent", "absent", "present")
 
-# I think we should take a look to see if any variables are correlated - I'm
-# using all numerical values (i.e., so the factors will not be in the correlation
-# graph that I'm about to make) - also include this graph in our flexdashboard:
+# Type coercion to factor
+data[, c('rbc', 'pc', 'pcc', 'ba')] <- lapply(data[, c('rbc', 'pc', 'pcc', 'ba')], FUN = as.factor)
+data[, c('htn', 'dm', 'cad', 'appet', 'pe', 'ane')] <- lapply(data[, c('htn', 'dm', 'cad', 'appet', 'pe', 'ane')], FUN = as.factor)
+data$classification <- factor(data$classification, levels = c("ckd", "notckd"), labels = c("Diseased", "Healthy"))
+
+# Check structure of data
 str(data)
-data %>% select(c(age, bp, sg, al, su, bgr, bu, sc, sod, pot, hemo, pcv)) %>% 
-  cor() %>% corrplot(method = "number")
 
-# We see that hemo and pcv are highly correlated.  I think this implies that 
-# if we use hemo or pcv in our model, then we shouldn't use the other (and 
-# vice verl)) + geom_bar(aes(fill = classification)) + facet_wrap(~al)
-# sa).  A similar argument can probably be made for hemo / al,
-# hemo / sc, and hemo / bu.
 
-# Otherwise, I think it could be worth exploring the relationship between
-# our dependent variable classification and other categorical variables:
-library(ggplot2)
+## == Exploratory Data Analysis ==
 
-# How about starting off with "rbc"?  The bar plot tells us that those without
-# kidney disease have a higher proportion of normal rbc to abnormal rbc.  
-# This makes sense - rbc can be used as predictor since there is a marked 
-# difference between both groups of individuals.
-ggplot(data, aes(x = appet)) + geom_bar(aes(fill = classification)) + 
-  facet_wrap(~classification)
+# The numerical variables have to be split and plotted separately to avoid cluttering the graphs.
+# Since all of them belong to parameters in a blood test, it is difficult to separate them.
+# Nonetheless, I have split them by the full blood count metrics and metabolic panel metrics.
+# wc and rc have been removed
 
-# By changing the categorical variable in the above line of code, I noted the following:
-#
-# 1) pc => proportion of abnormal to normal pc in diseased and healthy patients
-#          looks very similar.  
-#
-# 2) pcc => there's no pcc present in those that are healthy.
-#
-# 3) ba => ditto.  I'm not sure how pcc and ba can help us out in our aim.
-#
-# 4) htn => healthy individuals have no htn.  This is definitely a major factor,
-#           especially from a physiological standpoint and a data standpoint.
-#
-# 5) dm => ditto.
-#
-# 6) cad => ditto (though there's lesser individuals in the teal category).
-#
-# 7) appet => ditto.
-#
-# 8) pe => ditto.
+bloods <- data[, c('age', 'bp', 'hemo', 'sg', 'pcv')]
+metabolics <- data[, c('age', 'bgr', 'bu', 'sc', 'sod', 'pot')]
+
+# Using GGally package to plot scatterplot correlogram
+ggpairs(bloods,
+        mapping = aes(color = data$classification, alpha = 0.5),
+        title = "Multivariate Analysis of Age and Blood Count Variables",
+        upper = list(continuous = wrap("cor", method = "pearson", use = "complete.obs")),
+        lower = list(continuous = "points"),
+        diag = list(continuous = "densityDiag"),
+        axisLabels = "show",
+        columnLabels = c("Age", "Blood Pressure", "Hemoglobin", "Specific Gravity", "Packed Cell Volume"))
+
+ggpairs(metabolics,
+        mapping = aes(color = data$classification, alpha = 0.5),
+        title = "Multivariate Analysis of Age and Metabolic Variables",
+        upper = list(continuous = wrap("cor", method = "pearson", use = "complete.obs")),
+        lower = list(continuous = "points"),
+        diag = list(continuous = "densityDiag"),
+        axisLabels = "show",
+        columnLabels = c("Age", "Random Blood Glucose", "Blood Urea", "Serum Creatinine", "Sodium", "Potassium"))
+
+# Alternatively, if a correlation plot works better:
+num_var <- data[, c('age', 'bp', 'hemo', 'sg', 'pcv', 'bgr', 'bu', 'sc', 'sod', 'pot')]
+ggcorr(data = NULL, cor_matrix = cor(num_var, use = "complete.obs", method = "pearson"),
+       label = TRUE, label_round = 2, label_color = "black", label_size = 3,
+       palette = "RdBu")
+
+# hemo / pcv, hemo / sg, and hemo / bu are highly correlated
+# if we use hemo or pcv in our model, then we shouldn't use the other (and vice versa)
+
+
+# Exploring relationships between dependent variable classification and other categorical variables
+
+# Plot the blood test parameters
+# set fixed y-limit so that the scales will not be distorted when plots are arranged
+
+# rbc => marked difference between both groups of individuals (can be used as predictor)
+p1 <- ggplot(data, aes(x = rbc)) +
+      geom_bar(aes(fill = classification)) +
+      facet_wrap(~ classification) +
+      ylim(0, 250) +
+      labs(x = "Red Blood Cell") +
+      theme(legend.position = "none")
+
+# pc => proportion of abnormal to normal pc in diseased and healthy patients looks very similar
+p2 <- ggplot(data, aes(x = pc)) +
+      geom_bar(aes(fill = classification)) +
+      facet_wrap(~ classification) +
+      ylim(0, 250) +
+      labs(x = "Pus Cell") +
+      theme(legend.position = "none")
+
+# pcc => all absent in healthy individuals
+p3 <- ggplot(data, aes(x = pcc)) +
+      geom_bar(aes(fill = classification)) +
+      facet_wrap(~ classification) +
+      ylim(0, 250) +
+      labs(x = "Pus Cell Clumps") +
+      theme(legend.position = "none")
+
+# ba => all absent in healthy individuals
+p4 <- ggplot(data, aes(x = ba)) +
+      geom_bar(aes(fill = classification)) +
+      facet_wrap(~ classification) +
+      ylim(0, 250) +
+      labs(x = "Bacteria") +
+      theme(legend.position = "none")
+
+plot1 <- ggarrange(p1, p2, p3, p4,
+                   ncol = 2, nrow = 2,
+                   labels = c("A", "B", "C", "D"),
+                   common.legend = TRUE, legend = "bottom")
+
+annotate_figure(plot1, top = text_grob("Blood Test Parameters",
+                              color = "red", face = "bold", size = 14))
+
+# Plot co-morbities
+# htn => all absent in healthy individuals
+p5 <- ggplot(data, aes(x = htn)) +
+      geom_bar(aes(fill = classification)) +
+      facet_wrap(~ classification) +
+      ylim(0, 250) +
+      labs(x = "Hypertension") +
+      theme(legend.position = "none")
+
+# dm => all absent in healthy individuals
+p6 <- ggplot(data, aes(x = dm)) +
+      geom_bar(aes(fill = classification)) +
+      facet_wrap(~ classification) +
+      ylim(0, 250) +
+      labs(x = "Diabetes Mellitus") +
+      theme(legend.position = "none")
+
+# cad => all absent in healthy individuals
+p7 <- ggplot(data, aes(x = cad)) +
+      geom_bar(aes(fill = classification)) +
+      facet_wrap(~ classification) +
+      ylim(0, 250) +
+      labs(x = "Coronary Artery Disease") +
+      theme(legend.position = "none")
+
+# appet => all absent in healthy individuals
+p8 <- ggplot(data, aes(x = appet)) +
+      geom_bar(aes(fill = classification)) +
+      facet_wrap(~ classification) +
+      ylim(0, 250) +
+      labs(x = "Appetite") +
+      theme(legend.position = "none")
+
+# pe => all absent in healthy individuals
+p9 <- ggplot(data, aes(x = pe)) +
+      geom_bar(aes(fill = classification)) +
+      facet_wrap(~ classification) +
+      ylim(0, 250) +
+      labs(x = "Pedal Edema") +
+      theme(legend.position = "none")
+
+# ane => all absent in healthy individuals
+p10 <- ggplot(data, aes(x = ane)) +
+       geom_bar(aes(fill = classification)) +
+       facet_wrap(~ classification) +
+       ylim(0, 250) +
+       labs(x = "Anemia") +
+       theme(legend.position = "none")
+
+plot2 <- ggarrange(p5, p6, p7, p8, p9, p10,
+                   ncol = 2, nrow = 3,
+                   labels = c("A", "B", "C", "D", "E", "F"),
+                   common.legend = TRUE, legend = "bottom")
+
+annotate_figure(plot2, top = text_grob("Presence of Co-morbidities",
+                                       color = "red", face = "bold", size = 14))
 
 # I was also wondering if it makes sense to engineer a new feature based on
 # age.  I'm thinking that we can perhaps partition our "age" variable into
@@ -94,6 +206,3 @@ ggplot(data, aes(x = classification)) + geom_bar(aes(fill = classification)) +
 
 # Hoong Kai and Edsel - see if there's anything else within the data
 # that you want to explore!
-#
-#
-#
