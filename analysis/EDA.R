@@ -36,44 +36,47 @@ str(data)
 
 ## == Exploratory Data Analysis ==
 
-# The numerical variables have to be split and plotted separately to avoid cluttering the graphs.
-# Since all of them belong to parameters in a blood test, it is difficult to separate them.
-# Nonetheless, I have split them by the full blood count metrics and metabolic panel metrics.
+# Exploring the numerical variables
 # wc and rc have been removed
 
-bloods <- data[, c('age', 'bp', 'hemo', 'sg', 'pcv')]
-metabolics <- data[, c('age', 'bgr', 'bu', 'sc', 'sod', 'pot')]
+num_var <- data[, c('age', 'bp', 'hemo', 'sg', 'pcv', 'bgr', 'bu', 'sc', 'sod', 'pot', 'classification')]
+colnames(num_var) <- c("Age", "Blood Pressure", "Hemoglobin", "Specific Gravity", "Packed Cell Volume",
+                       "Random Blood Glucose", "Blood Urea", "Serum Creatinine", "Sodium", "Potassium",
+                       "Classification")
 
-# Using GGally package to plot scatterplot correlogram
-ggpairs(bloods,
-        mapping = aes(color = data$classification, alpha = 0.5),
-        title = "Multivariate Analysis of Age and Blood Count Variables",
-        upper = list(continuous = wrap("cor", method = "pearson", use = "complete.obs")),
+# Using GGally package to plot scatterplot correlogram:
+ggpairs(num_var,
+        columns = 1:10,
+        mapping = aes(color = Classification, alpha = 0.5),
+        title = "Multivariate Analysis of Continuous Variables",
+        upper = list(continuous = wrap("cor", method = "pearson", use = "complete.obs", size = 2.5)),
         lower = list(continuous = "points"),
         diag = list(continuous = "densityDiag"),
-        axisLabels = "show",
-        columnLabels = c("Age", "Blood Pressure", "Hemoglobin", "Specific Gravity", "Packed Cell Volume"))
-
-ggpairs(metabolics,
-        mapping = aes(color = data$classification, alpha = 0.5),
-        title = "Multivariate Analysis of Age and Metabolic Variables",
-        upper = list(continuous = wrap("cor", method = "pearson", use = "complete.obs")),
-        lower = list(continuous = "points"),
-        diag = list(continuous = "densityDiag"),
-        axisLabels = "show",
-        columnLabels = c("Age", "Random Blood Glucose", "Blood Urea", "Serum Creatinine", "Sodium", "Potassium"))
+        axisLabels = "show")
 
 # Alternatively, if a correlation plot works better:
-num_var <- data[, c('age', 'bp', 'hemo', 'sg', 'pcv', 'bgr', 'bu', 'sc', 'sod', 'pot')]
-ggcorr(data = NULL, cor_matrix = cor(num_var, use = "complete.obs", method = "pearson"),
+ggcorr(data = NULL, cor_matrix = cor(num_var[1:10], use = "complete.obs", method = "pearson"),
        label = TRUE, label_round = 2, label_color = "black", label_size = 3,
        palette = "RdBu")
 
 # hemo / pcv, hemo / sg, and hemo / bu are highly correlated
 # if we use hemo or pcv in our model, then we shouldn't use the other (and vice versa)
 
+# Here is a parallel coordinate plot that I'm not sure whether it will be useful
+ggparcoord(num_var,
+           columns = 1:10,
+           groupColumn = 11,
+           scale = "std",
+           order = "anyClass",
+           showPoints = TRUE,
+           alphaLines = 0.3,
+           title = "Parallel Coordinate Plot for Numerical Variables") +
+  theme(legend.position = "bottom",
+        plot.title = element_text(size = 13)) +
+  xlab("") +
+  ylab("Scaled Values")
 
-# Exploring relationships between dependent variable classification and other categorical variables
+# Exploring the categorical variables
 
 # Plot the blood test parameters
 # set fixed y-limit so that the scales will not be distorted when plots are arranged
