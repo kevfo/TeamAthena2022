@@ -4,6 +4,7 @@
 library(tidyverse)
 library(caret)
 library(mi)
+library(ggplot2)
 
 # Set working directory
 setwd("C:/Users/Kevin/Desktop/Projects/R/TeamAthena2022/analysis/")
@@ -50,6 +51,21 @@ plot(data$age, data$bp) ; plot(data$age, data$sg) ; plot(data$age, data$bgr)
 plot(data$age, data$bu) ; plot(data$age, data$sc) ; plot(data$age, data$sod)
 plot(data$age, data$pot) ; plot(data$age, data$hemo) ; plot(data$age, data$pcv)
 plot(data$age, data$wc) ; plot(data$age, data$rc)
+
+# here are the combined boxplots
+plot_var <- data[, c('age', 'bp', 'hemo', 'sg', 'pcv', 'bgr', 'bu', 'sc', 'sod', 'pot', 'wc', 'rc', 'classification')]
+colnames(plot_var) <- c("Age", "Blood Pressure", "Hemoglobin", "Specific Gravity", "Packed Cell Volume",
+                       "Random Blood Glucose", "Blood Urea", "Serum Creatinine", "Sodium", "Potassium",
+                       "White Blood Cell Count", "Red Blood Cell Count", "Classification")
+plot_var$Classification <- factor(plot_var$Classification, levels = c("ckd", "notckd"), labels = c("Diseased", "Healthy"))
+
+plot_var %>%
+  pivot_longer(cols = 1:12, values_to = "Value", names_to = "Variable") %>%
+  ggplot(aes(x = Classification, y = Value, color = Classification)) +
+  geom_boxplot() +
+  facet_wrap(~ Variable, scales = "free") +
+  xlab("") + ylab("") +
+  theme(legend.position = "none")
 
 # remove data whose "age" is NA as it is impossible to predict somebody's age
 # also remove entries with unknown kidney disease status
