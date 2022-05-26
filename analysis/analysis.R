@@ -57,7 +57,7 @@ data <- data %>% filter(!is.na(age) & !is.na(classification))
 
 # wc and rc have at least 25% missing data, therefore remove them as data might
 # become biased as a result of median imputation
-data <- data %>% select(-c(wc, rc))
+data <- data %>% select(-c(wc, rc, rbc))
 
 ## == Using MI to impute the missing data == 
 
