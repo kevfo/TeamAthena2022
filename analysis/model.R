@@ -77,7 +77,7 @@ confusionMatrix(testing$classification, rfPredictions)
 # Otherwise, I even made a ROC curve to go with the confusion matrix.  It
 # had a very high AUC value, hence implying that this random forest model
 # of ours is too good.:
-makeROC(rfInitial, testing, "RF", T)
+# makeROC(rfInitial, testing, "RF", T)
 
 # But while we're here, taking what Edsel found into account, our updated 
 # data frame is gonna look like this (15 total predictors):
@@ -99,8 +99,8 @@ rfNewer <- train(classification ~ ., data = training, method = 'rf',
 # curiosity, I also constructed a variable importance plot to see which
 # values are actually contributing to the trees in the random forests:
 rfPredictions <- predict(rfNewer, testing)
-confusionMatrix(testing$classification, rfPredictions)
-vip(rfNewer, geom = "point")
+# confusionMatrix(testing$classification, rfPredictions)
+# vip(rfNewer, geom = "point")
 
 # I also decided to make a cumulative variable importance plot in the form 
 # of a bar plot:
@@ -110,7 +110,7 @@ viStats <- vi_model(rfNewer) %>% arrange(desc(Importance))
           names = viStats$Variable, main = "Cumulative Variable Importance Plot of Newer Random Forest Model",
           ylab = "Cumulative Importance", xlab = "Variable")
 abline(h = 0.9, lty = 'dashed', col = 'red', lwd = 1.5)
-text(x = 1, y = 0.97, "Cutoff")  # include this in shinyflexboard
+text(x = 3, y = 0.97, "Cutoff")  # include this in shinyflexboard
 
 # I also wonder if we need that many predictor variables to begin with.
 # At least according to R (see the above block of code), a good portion of 
@@ -122,8 +122,9 @@ text(x = 1, y = 0.97, "Cutoff")  # include this in shinyflexboard
 # substantial amount.  The more features we have, the longer it takes to train
 # our model, and I'm not very sure if it's worth that extra training time...
 
-data2 <- data %>% select(c(viStats$Variable[1:2], htn, 
-                           viStats$Variable[4:6], al, classification))
+data2 <- data %>% select(c(viStats$Variable[1:4], htn, 
+                           viStats$Variable[6:7], dm, bp, 
+                           pe, age, su, classification))
 
 set.seed(123)
 index <- createDataPartition(data2$classification, p = 0.6, list = F)
@@ -134,8 +135,8 @@ rfWithVip <- train(classification ~ ., data = training, method = 'rf', trControl
 
 # Accuracy: 96.13%, sensitivity: 1
 rfPredictions <- predict(rfWithVip, testing)
-confusionMatrix(testing$classification, rfPredictions)
-makeROC(rfWithVip, testing, "Random Forest", T)
+# confusionMatrix(testing$classification, rfPredictions)
+# makeROC(rfWithVip, testing, "Random Forest", T)
 
 # So far, we have three models:
 #
@@ -169,19 +170,19 @@ makeROC(rfWithVip, testing, "Random Forest", T)
 
 rpartBench <- train(classification ~ ., data = training, method = 'rpart',
                     trControl = kfold)
-rpartBench %>% predict(testing) %>% confusionMatrix(testing$classification)
+# rpartBench %>% predict(testing) %>% confusionMatrix(testing$classification)
 
-makeROC(rpartBench, testing, "Decision Tree", T)
+# makeROC(rpartBench, testing, "Decision Tree", T)
 
 # -- Logistic regression -- (97.42% accuracy, 95.83% sensitive)
 
 logBench <- glm(classification ~ ., family = binomial, data = training)
 
 # Is multicolinearity a problem in logBench?
-car::vif(logBench)
+# car::vif(logBench)
 
 # Just to make sure of something...
-contrasts(training$classification)
+# contrasts(training$classification)
 
 # So our model performs very well when it comes to its own data.  What 
 # about testing data?
@@ -193,20 +194,20 @@ predictions <- predict(logBench, newdata = testing, type = 'response')
 ifelse(predictions < 0.5, 'Diseased', 'Healthy') %>% as.factor() %>% confusionMatrix(testing$classification)
 
 # Make the ROC curve:
-logTestPred <- ifelse(predictions < 0.5, 'Diseased', 'Healthy') 
-logAucValue <- ifelse(logTestPred == 'Diseased', 0, 1) %>% 
-  prediction(ifelse(testing$classification == 'Diseased', 0, 1)) %>% performance(measure = 'auc')
-logAucValue <- logAucValue@y.values[[1]]
+# logTestPred <- ifelse(predictions < 0.5, 'Diseased', 'Healthy') 
+# logAucValue <- ifelse(logTestPred == 'Diseased', 0, 1) %>% 
+#  prediction(ifelse(testing$classification == 'Diseased', 0, 1)) %>% performance(measure = 'auc')
+# logAucValue <- logAucValue@y.values[[1]]
 
-ifelse(logTestPred == 'Diseased', 0, 1) %>% prediction(ifelse(testing$classification == 'Diseased', 0, 1)) %>% 
-  performance('tpr', 'fpr') %>% plot(main = 'ROC Curve of Logistic Regression',
-                                     colorize = T)
-grid(lty = 'dashed', lwd = 1.5) ; text(x = 0.7, y = 0.3, paste0("AUC: ", logAucValue))
+# ifelse(logTestPred == 'Diseased', 0, 1) %>% prediction(ifelse(testing$classification == 'Diseased', 0, 1)) %>% 
+#   performance('tpr', 'fpr') %>% plot(main = 'ROC Curve of Logistic Regression',
+#                                     colorize = T)
+# grid(lty = 'dashed', lwd = 1.5) ; text(x = 0.7, y = 0.3, paste0("AUC: ", logAucValue))
 
 # -- kNN -- (bad idea to begin with - 82.58% accuracy, 77.08% sensitive)
 knnBench <- train(classification ~ sc + sg + sod + bu + bgr, data = training, method = 'knn', trControl = kfold)
-knnBench
+# knnBench
 
-predict(knnBench, testing) %>% confusionMatrix(testing$classification)
+# predict(knnBench, testing) %>% confusionMatrix(testing$classification)
 
-makeROC(knnBench, testing, "kNN", T)
+#m akeROC(knnBench, testing, "kNN", T)

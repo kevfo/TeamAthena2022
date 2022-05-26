@@ -2,7 +2,7 @@
 library(plumber) 
 
 # For our models:
-source("../../analysis/model.R")
+source("model.R")
 
 #* A health check: is the API running okay?
 #* @get /health-check
@@ -25,7 +25,7 @@ function(req, res) {
 #* @plumber 
 function(pr) {
   pr %>% 
-    pr_set_api_spec(yaml::read_yaml('../webapp/apispec.yaml'))
+    pr_set_api_spec(yaml::read_yaml('apispec.yaml'))
 }
 
 
