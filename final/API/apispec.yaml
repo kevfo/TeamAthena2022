@@ -36,21 +36,9 @@ paths:
                   type: number
                   title: "Serum creatinine (sc) level (mgs / dl)"
                   example: 1.2
-                pot:
-                  type: number
-                  title: "Potassium level (mEg / L)"
-                  example: 1.2
                 htn:
                   type: string
                   title: "Has hypertension (htn)?"
-                  example: "yes"
-                dm:
-                  type: string
-                  title: "Has diabetes mellitus (dm)?"
-                  example: "yes"
-                pe:
-                  type: string
-                  title: "Has pedal edema (pe)?"
                   example: "yes"
                 sod:
                   type: number
@@ -64,7 +52,8 @@ paths:
                   type: number
                   title: "Blood glucose random (bgr - mgs/dl)"
                   example: 100.12
-                bp:
-                  type: number
-                  title: "Blood pressure (mm / Hg)"
-                  example: 80
+                al:
+                  type: integer
+                  format: int64
+                  title: "Albumin level (0 - 5)"
+                  example: 2

@@ -17,7 +17,7 @@ function() {
 #* @post /predict
 function(req, res) {
   nd <- as.data.frame(req$body) 
-  nd$htn <- as.factor(nd$htn) ; nd$pe <- as.factor(nd$pe) ; nd$dm <- as.factor(nd$dm)
+  nd$htn <- as.factor(nd$htn) ; nd$al <- as.factor(nd$al)
   predict(rfWithVip, newdata = nd)
 }
 
