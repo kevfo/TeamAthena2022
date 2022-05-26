@@ -177,15 +177,91 @@ knitr::include_graphics("images/training.PNG")
 
 ***
 
-<commentary here>
+From observation, we noted that our data had 60% diseased patients and 40% healthy patients (i.e., the distribution is skewed).  Hence, via trial and error, we wanted to find a training / testing split that allowed for a similar proportion of diseased to healthy patients lest our models become biased towards one class.
+
+The `caret` package was used for this portion and the next.
+
+### Attempting cross-validation to improve the accuracy of our model
+
+```{r}
+knitr::include_graphics('images/cv.jpeg')
+```
+
+***
+
+In order to maximize accuracy, we also perform cross-validation with 10 folds.
+
+Like previously mentioned, this portion of the workflow was also done up in the `caret` package.
 
 ### Constructing an initial random forest model and evaluating its performance
 
 ```{r}
-
+confusionMatrix(testing$classification, rfPredictions)
 ```
 
 ***
+
+A random forest was fitted using `caret` before a confusion matrix (see left) was generated.  Our model - using *all* predictors - had very high accuracy and sensitivity.  
+
+While not shown, the AUC value for this model is also predicted to be 0.979 - this implies that if a positive and a negative control were to be randomly sampled, that the positive control will have a higher predicted risk than the negative control 97.9% of the time.
+
+However, we identify two issues:
+
+1.  Since this model performs so well, how do other models (e.g., logistic regression) compare to this and do they perform similarly well?  
+
+1.  The variables used to predict kidney disease status are not all used in Singapore.
+
+### Re-training our random forest model based on variables used in the Singaporean context
+
+```{r}
+knitr::include_graphics('images/variablestofocus.jpeg')
+```
+
+***
+
+After some research, we found that the following variables are used for passive or active surveillance (green and yellow highlights respectively).  Because of this, we thought it would be wise to re-train our initial random forest model based on these variables.
+
+A newly-constructed confusion matrix shows that our new model accuracy is 0.9742 with a sensitivity of 1.  So, we still have similarly high accuracy and in this case, perfect sensitivity.  However, we thought that the model could still be improved in terms of its practicality.
+
+It appears unlikely that a user using this model would have both measures for passive or active surveillance for a patient.  So, it appears wise to narrow down the variables used in the random forest model.
+
+### Cumulative variable importance plot to decide variables to use and retraining our model.
+
+```{r}
+knitr::include_graphics('images/cumImp.PNG')
+```
+
+***
+
+Variable importance is a score that quantifies how "useful" a variable is in constructing a decision tree (or in this case, a random forest).  Looking at the plot, it appears that the increase in variable importance appears to not increase much at around 90% of the total variable importance.  
+
+Upon looking at the confusion matrix, we see that this new model has a slight dip in accuracy (96.13%), but is still perfectly sensitive (we also have 6 false positives).  However, we think that the tradeoff between accuracy and lesser features is worthwhile - the features used are `sg`, `sc`, `htn`, `sod`, `bu`, `bgr`, and `al`.
+
+While some variables are from passive and active surveillances, we still think that this model is useful as it reduces the workload for the user and produces rapid results.
+
+### Benchmarking 
+
+```{r}
+knitr::include_graphics('images/questionMan.PNG')
+```
+
+***
+
+We constructed the following models and found the following statistics:
+
+1.  **Decision tree (via CART algorithm)**
+    
+    96.77% accurate, 94.79% sensitive.  Performance-wise, it is similar to our random forests model.  However, if the data is altered in any way, the decision tree's predictions may vary and the tree structure be different.
+   
+1.  Logistic regression
+
+    Fortunately for this case, multicolinearity does not seem to be an issue as observed during exploratory data analysis.  It is 95.48 % accurate and 92.71% sensitive.
+
+1.  kNN 
+
+    Here, we used all numerical variables to construct the model - `k = 9` was the final `k` value chosen by `caret` during training.  Nevertheless, it is 82.58% accurate and 77.08% sensitive.
+    
+    Based on the exploratory data analysis, this already seems like a questionable idea at best - many data points are clustered together.
 
 Applications { .storyboard}
 ====================================
@@ -203,14 +279,11 @@ ui <- fluidPage(
                sidebarPanel(
                  numericInput('sc', 'Serum Creatinine (sc) Level (mgs / dl)', 0, min = 0),
                  numericInput('sg', 'Specific Gravity (sg)', 0, min = 0),
-                 numericInput('pot', 'Potassium (al) Level (mEg / L)', 0, min = 0),
                  numericInput('bgr', 'Blood Glucose Ramdom (bgr - mgs / dl)', 0, min = 0),
                  numericInput('sod', 'Sodium (sod) Level (mEg / L)', 0, min = 0),
                  numericInput('bu', 'Blood Urea (bu) Level (mgs / dl)', 0, min = 0),
-                 selectInput('dm', 'Has Diabetes Mellitus (dm)?', choices),
-                 selectInput('pe', 'Has Pedal Edema (pe)?', choices),
-                 numericInput("bp", "Blood Pressure (mm / Hg)", 0, min = 0),
                  selectInput('htn', 'Has Hypertension (htn)?', choices),
+                 selectInput('al', 'Albumin Level (0 - 5)', alLevels)
                  actionButton('submit', 'Predict Status')
                ),
                mainPanel(
@@ -236,11 +309,9 @@ server <- function(input, output, session) {
     if (input$submit > 0) {
       df <- data.frame(
         sg = input$sg, sc = input$sc, sod = input$sod, bgr = input$bgr,
-        bu = input$bu, pot = input$pot, htn = input$htn, dm = input$dm,
-        bp = input$bp, pe = input$pe
+        bu = input$bu, al = input$al, htn = input$htn
       )
-      df$htn <- as.factor(df$htn) ; df$dm <- as.factor(df$dm)
-      df$pe <- as.factor(df$pe)
+      df$htn <- as.factor(df$htn) ; df$al <- as.factor(df$al)
     }
     return(list(df = df))
   })
@@ -313,7 +384,7 @@ knitr::include_graphics("images/API.PNG")
 
 ***
 
-Can be extended to other data scientists / medical institutions / software developers.
+An API constructed using `plumber` could be used to extend the usefulness of our work to other parties (e.g., to other data scientists / medical institutions / software developers).
 
 
 

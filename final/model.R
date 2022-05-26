@@ -1,7 +1,7 @@
 library(tidyverse) ; library(caret) ; library(vip) ; library(dplyr)
 library(rattle) ; library(ROCR) ; library(car)
 
-setwd("C:/Users/Kevin/Desktop/Projects/R/TeamAthena2022/analysis/")
+setwd("C:/Users/Kevin/Desktop/Projects/R/TeamAthena2022/final/")
 source("EDA.R")
 
 # This is a function to make an AUC curve: a plot of a classifier's
@@ -99,7 +99,7 @@ rfNewer <- train(classification ~ ., data = training, method = 'rf',
 # curiosity, I also constructed a variable importance plot to see which
 # values are actually contributing to the trees in the random forests:
 rfPredictions <- predict(rfNewer, testing)
-confusionMatrix(testing$classification, rfPredictions)
+# confusionMatrix(testing$classification, rfPredictions)
 #vip(rfNewer, geom = "point")
 
 # I also decided to make a cumulative variable importance plot in the form 
@@ -122,9 +122,8 @@ viStats <- vi_model(rfNewer) %>% arrange(desc(Importance))
 # substantial amount.  The more features we have, the longer it takes to train
 # our model, and I'm not very sure if it's worth that extra training time...
 
-data2 <- data %>% select(c(viStats$Variable[1:4], htn, 
-                           viStats$Variable[6:7], dm, bp,
-                           pe, classification))
+data2 <- data %>% select(c(viStats$Variable[1:2], htn, 
+                           viStats$Variable[4:6], al, classification))
 
 set.seed(123)
 index <- createDataPartition(data2$classification, p = 0.6, list = F)
@@ -187,11 +186,11 @@ logBench <- glm(classification ~ ., family = binomial, data = training)
 # So our model performs very well when it comes to its own data.  What 
 # about testing data?
 predictions <- predict(logBench, type = 'response')
-#ifelse(predictions < 0.5, "Diseased", 'Healthy') %>% as.factor() %>% confusionMatrix(training$classification)
+ifelse(predictions < 0.5, "Diseased", 'Healthy') %>% as.factor() %>% confusionMatrix(training$classification)
 
 # Testing data (95.48 % accuracy, 92.71% sensitive):
 predictions <- predict(logBench, newdata = testing, type = 'response')
-#ifelse(predictions < 0.5, 'Diseased', 'Healthy') %>% as.factor() %>% confusionMatrix(testing$classification)
+ifelse(predictions < 0.5, 'Diseased', 'Healthy') %>% as.factor() %>% confusionMatrix(testing$classification)
 
 # Make the ROC curve:
 #logTestPred <- ifelse(predictions < 0.5, 'Diseased', 'Healthy') 

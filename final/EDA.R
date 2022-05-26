@@ -19,7 +19,7 @@ data <- read_csv("ImputedData.csv")
 ## == Data Pre-processing ==
 
 # Taking a look at the data:
-str(data) ; summary(data)
+# str(data) ; summary(data)
 
 # Changing some variable values for the plots later
 data$pcc <- ifelse(data$pcc == "notpresent", "absent", "present")
@@ -31,7 +31,7 @@ data[, c('htn', 'dm', 'cad', 'appet', 'pe', 'ane')] <- lapply(data[, c('htn', 'd
 data$classification <- factor(data$classification, levels = c("ckd", "notckd"), labels = c("Diseased", "Healthy"))
 
 # Check structure of data
-str(data)
+# str(data)
 
 
 ## == Exploratory Data Analysis ==
@@ -195,8 +195,8 @@ data$agerange <- case_when(data$age < 45 ~ "Young",
                            data$age >= 65 ~ "Elderly")
 data$agerange <- as.factor(data$agerange)
 
-ggplot(data, aes(x = classification)) + geom_bar(aes(fill = classification)) +
-  facet_wrap(~agerange)
+#ggplot(data, aes(x = classification)) + geom_bar(aes(fill = classification)) +
+#  facet_wrap(~agerange)
 
 # I think that this could be helpful in our model.  The younger we get, 
 # the lesser amount of people with kidney failure that we have.  
