@@ -1,5 +1,5 @@
 ---
-title: "Team Athena's Stuff"
+title: "Team Athena"
 output: 
   flexdashboard::flex_dashboard:
     storyboard: true
@@ -15,17 +15,16 @@ Background and Rationale { .storyboard}
 ### Singapore ranks first in the world for diabetes-induced kidney failure
 
 ```{r}
-library(ggplot2)
+library(ggplot2) ; library(flexdashboard)
 
 df <- data.frame(country=c("Singapore", "Qatar", "HongKong"),
                  rate=c(67.5, 63.9, 52.9))
 
 # Basic barplot
 ggplot(data=df, aes(x=country, y=rate)) +
-  geom_bar(stat="identity")+
+  geom_bar(stat="identity", aes(fill = country))+
   geom_text(aes(label=rate), vjust=1.6, color="white", size=3.5)+
   theme_minimal()
-
 ```
 
 ***
@@ -40,15 +39,13 @@ Moreover, up to 1 million diabetic patients is predicted to be diagnosed in 2050
 
 ### Rationale
 
-```{r eval = F}
-Include something else here...
+```{r}
+knitr::include_graphics('images/ds.jpg')
 ```
 
-We propose a random forest model that serves as a prototypical tool for our target users - laboratory diagnosticians/doctors - to decide whether a person is suffering from renal failure as well as the stage of his/her illness. When the professional inputs the required values in accessing health outcomes of a person, the result can be displayed on the screen immediately. If put into use, it is estimated that  people can benefit from our application, not including the ones who have not diagnosd with renal failures yet. 
+***
 
-
-- Singapore's ageing population is a key factor for this high rate of kidney failure of its total population.
-- Given many data pts.
+We proposed a random forest model that serves as a prototypical tool for our target users - laboratory diagnosticians/doctors - to decide whether a person is suffering from renal failure as well as the stage of his/her illness. When the professional inputs the required values in accessing health outcomes of a person, the result can be displayed on the screen immediately. As prevention is key for curing diabetic renal failure, our App is created based on a large dataset. Based on National Registry of Diseases Office, approximately 30% of patients with diabetes are unaware of their poor kidney health condition. Having over 0.4 million diabetes patients in the country, if our App is in use, it is estimated that 130 thousand Singaporean can benefit from our application by identifying the disease at an earlier stage. 
 
 
 
@@ -119,6 +116,18 @@ The rightmost graphs are residual plots - possibly showing that the values predi
 Exploratory Data Analysis { .storyboard}
 =====================================
 
+### How does the distribution of data differ within numerical variables based on health status?
+
+```{r}
+knitr::include_graphics('images/boxplot.png')
+```
+
+***
+
+Noticeably, those who are diseased have outlier data points compared to healthy individuals.  However, there appears to be sizable differences between the median values of diseased and healthy patients (at least for certain variables like specific gravity).
+
+Yet, although we can still somewhat make out what variables we could use during model training (e.g., perhaps specific gravity due to the marked differences in values), the boxplot to the left is also difficult to interpret for purposes of feature selection.
+
 ### Are some variables more correlated with one another?
 
 ```{r}
@@ -127,11 +136,23 @@ knitr::include_graphics("images/trianglecor.png")
 
 ***
 
-This was among one of the first actions we did with the data - examining it for multicolinearity.  
-
 Based on the correlation plot itself, we note that several variable pairs are highly correlated.
 
-Hence, moving forward, we should be mindful of these variables lest we end up using them in the same model.
+Hence, moving forward, we should be mindful of these variables lest we end up using them in the same model.  This is because the variable importance of one variable might be significantly reduced if there is already another highly-correlated variable.  More importantly, multicolinearity may lead to the assumption that one variable is important and others not (when the truth may could be the aforementioned).
+
+### Might a multivariate analysis of continuous variables reveal any individual dependencies?
+
+```{r}
+knitr::include_graphics("images/multiana.PNG")
+```
+
+***
+
+We wanted to know if variables such as age, random blood glucose level, and potassium and sodium levels had individual dependencies so that we can further understand relationships that may exist within data.  
+
+In the scatterplot correlogram, data highlighted in red are for diseased individuals while those in teal are for healthy individuals. We can observe that age is indeed not correlated with the other variables in any way. Sodium and potassium levels are also do no correlate that well with blood pressure.
+
+Nonetheless, there seems to be marked differences between diseased and healthy individuals for the haemoglobin, specific gravity and packed cell volume variables.
 
 
 ### How do co-morbidies present themselves in healthy and diseased individuals?
@@ -154,7 +175,7 @@ knitr::include_graphics("images/agerange.PNG")
 
 ***
 
-Out of curiosity, we also enginnered a new feature `agerange` that we thought could be useful when model training.  We have three categories of ages defined as follows (based off commonly accepted standards in the US):
+Out of curiosity, we also enginnered a new feature `agerange` that we thought could be useful when model training.  We have three categories of ages defined as follows (based off commonly accepted standards in the US as none could be found in the Singaporean context):
 
 1.  **Elderly** => $\le$ 65
 1.  **Middle age** => $\le$ 45, $\le$ 65
@@ -202,8 +223,6 @@ confusionMatrix(testing$classification, rfPredictions)
 ***
 
 A random forest was fitted using `caret` before a confusion matrix (see left) was generated.  Our model - using *all* predictors - had very high accuracy and sensitivity.  
-
-While not shown, the AUC value for this model is also predicted to be 0.979 - this implies that if a positive and a negative control were to be randomly sampled, that the positive control will have a higher predicted risk than the negative control 97.9% of the time.
 
 However, we identify two issues:
 
@@ -253,11 +272,11 @@ We constructed the following models and found the following statistics:
     
     96.77% accurate, 94.79% sensitive.  Performance-wise, it is similar to our random forests model.  However, if the data is altered in any way, the decision tree's predictions may vary and the tree structure be different.
    
-1.  Logistic regression
+1.  **Logistic regression**
 
     Fortunately for this case, multicolinearity does not seem to be an issue as observed during exploratory data analysis.  It is 95.48 % accurate and 92.71% sensitive.
 
-1.  kNN 
+1.  **kNN** 
 
     Here, we used all numerical variables to construct the model - `k = 9` was the final `k` value chosen by `caret` during training.  Nevertheless, it is 82.58% accurate and 77.08% sensitive.
     
@@ -269,113 +288,35 @@ Applications { .storyboard}
 ### A trivial application to predict patient(s)' kidney health status.
 
 ```{r}
-choices <- c('yes', 'no')
-alLevels <- 0:5
-
-ui <- fluidPage(
-  tabsetPanel(
-    tabPanel("Quick Check", br(),
-             sidebarLayout(
-               sidebarPanel(
-                 numericInput('sc', 'Serum Creatinine (sc) Level (mgs / dl)', 0, min = 0),
-                 numericInput('sg', 'Specific Gravity (sg)', 0, min = 0),
-                 numericInput('bgr', 'Blood Glucose Ramdom (bgr - mgs / dl)', 0, min = 0),
-                 numericInput('sod', 'Sodium (sod) Level (mEg / L)', 0, min = 0),
-                 numericInput('bu', 'Blood Urea (bu) Level (mgs / dl)', 0, min = 0),
-                 selectInput('htn', 'Has Hypertension (htn)?', choices),
-                 selectInput('al', 'Albumin Level (0 - 5)', alLevels)
-                 actionButton('submit', 'Predict Status')
-               ),
-               mainPanel(
-                 h3("Data Entered"),
-                 tableOutput('dataE1'),
-                 h3("Concensus"),
-                 htmlOutput('status')
-               )
-             )),
-    tabPanel("Multiple Data", br(),
-             fileInput('fileUpload', "Upload a .csv file!", multiple = T, accept = '.csv'),
-             actionButton('mdSubmit', "Predict Status"), 
-             br(), br(), br(), 
-             dataTableOutput('testme')
-    )
-  )
-)
-
-server <- function(input, output, session) {
-  
-  # == Helper function to make a data frame ==
-  makeDF <- reactive({
-    if (input$submit > 0) {
-      df <- data.frame(
-        sg = input$sg, sc = input$sc, sod = input$sod, bgr = input$bgr,
-        bu = input$bu, al = input$al, htn = input$htn
-      )
-      df$htn <- as.factor(df$htn) ; df$al <- as.factor(df$al)
-    }
-    return(list(df = df))
-  })
-  
-  dataToReturn <- reactiveValues(data = NULL)
-  
-  observeEvent(input$submit, {
-    dataToReturn$df <- makeDF()$df
-  })
-  
-  output$dataE1 <- renderTable({
-    if (is.null(dataToReturn$df)) {return(data.frame(sc = NA, sg = NA, 
-                                                     al = NA, htn = NA,
-                                                     sod = NA, bu = NA, bgr = NA))}
-    dataToReturn$df
-  })
-  
-  output$status <- renderText({
-    if (is.null(dataToReturn$df)) {return("Enter some data to get started!")}
-    pStatus <- predict(rfWithVip, dataToReturn$df) %>% as.character()
-    if (pStatus == 'Diseased') {
-      return("<b><font color = \"red\">Patient has kidney disease</font></b>")
-    } else {
-      return("<b><font color = \"green\">Patient does not have kidney disease</font></b>")
-    }
-  })
-  
-  # == .csv file input == 
-  
-  patientData <- reactive({
-    req(input$fileUpload)
-    
-    pData <- tools::file_ext(input$fileUpload$name)
-    switch(pData, 
-           csv = vroom::vroom(input$fileUpload$datapath, delim = ','),
-           validate("Please only upload .csv files!"))
-  })
-  
-  dataToCompute <- reactiveValues(data = NULL)
-  observeEvent(input$mdSubmit, {
-    dataToCompute$df <- patientData()
-    dataToCompute$df$dm <- as.factor(dataToCompute$df$dm)
-    dataToCompute$df$htn <- as.factor(dataToCompute$df$htn)
-    dataToCompute$df$pe <- as.factor(dataToCompute$df$pe)
-    dataToCompute$allPred <- predict(rfWithVip, dataToCompute$df)
-  })
-  
-  output$testme <- renderDataTable({
-    if (is.null(dataToCompute$df)) {return(data.frame(`Subject Number` = NA, Predictions = NA))}
-    data.frame(`Subject Number` = 1:length(dataToCompute$allPred), 
-                    Predictions = dataToCompute$allPred)
-  }, options = list(pagelength = 5))
-}
-
-shinyApp(ui, server, options = list(height = 1200))
+knitr::include_graphics('images/app.PNG')
 ```
 
 ***
 
-Two tabs: one for quickly checking a few data points and one for checking numerous data points.
+- Prototype for predicting whether a patient has kidney disease or not
+- As the target audience for the prototype is for lab diagnosticians or doctors who generally do not have too much computing knowledge, we chose a  user-friendly interface (i.e., to the point).
+- There are 2 different interfaces- quick check & multiple data
 
-Requires very little computational knowledge - very user friendly!
+*Quick Check*
 
-### A RESTful API service.
+- Allows user to input data for various parameters such as Creatinine Level, Albumin Level & whether the patient has hypertension.
+- Data is then read to a dataframe & random forest model is applied
+- Outputs a prediction on whether the patient has kidney disease or not
+
+*Multiple Data*
+
+- User can enter 1 or more datasets as a .csv file type
+- Data uploaded will be displayed as a table
+- Data is then read to a dataframe & random forest model is applied
+- Outputs a prediction on whether the patient(s) has / have kidney disease or not
+- Validation to check whether file upload is of the correct format
+
+**Cons**
+
+- Unable to deal with missing data, so user must manually remove missing data rows
+    - Can use cold deck imputation to insert values for missing data using data from another external source as data that the random forest model was trained on was limited
+
+### A RESTful API service to share our work with healthcare institutions / application developers.
 
 ```{r}
 setwd("C:/Users/Kevin/Desktop/Projects/R/TeamAthena2022/final")
@@ -384,7 +325,14 @@ knitr::include_graphics("images/API.PNG")
 
 ***
 
-An API constructed using `plumber` could be used to extend the usefulness of our work to other parties (e.g., to other data scientists / medical institutions / software developers).
+1) Made using the `plumber` package (in R) and fitted with the Swagger UI
+    - Can share code with others in a simple manner
+    - Particularly useful for healthcare settings, systems, or even application developers
+    - Based on the REST (i.e., **Re**presentational **s**tate **t**ransfer) architecture
+    
+1) Two endpoints:
+    - `/health-check` - a `GET` request that (for the most part) returns a `200 OK` response in order to verify that the API is indeed up and running. 
+    - `/predict` - a `POST` request that accepts JSON and returns a JSON payload with the predicted status of the patient(s) in question.
 
 
 
